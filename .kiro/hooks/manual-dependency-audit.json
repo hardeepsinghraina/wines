@@ -1,0 +1,8 @@
+{
+  "name": "📦 Dependency Security Audit",
+  "description": "Manual trigger: Check for outdated packages and security vulnerabilities",
+  "trigger": {
+    "type": "manual"
+  },
+  "prompt": "Perform dependency audit:\n\n1. Run npm audit in both frontend and backend\n2. Check for outdated packages (npm outdated)\n3. Identify unused dependencies\n4. Review package sizes and alternatives\n5. Check for duplicate dependencies\n6. Verify license compatibility\n7. Review critical security vulnerabilities\n\nFor this luxury wine platform:\n- Payment processing libraries must be up-to-date\n- Crypto libraries should be latest stable versions\n- Next.js and React should be current\n- Security middleware must be patched\n\nProvide:\n- List of critical updates needed\n- Security vulnerabilities to fix immediately\n- Packages that can be removed\n- Lighter alternatives for heavy packages\n- Update strategy to minimize breaking changes"
+}

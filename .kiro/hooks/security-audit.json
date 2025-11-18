@@ -1,0 +1,9 @@
+{
+  "name": "Security Audit on Save",
+  "description": "Automatically check for security vulnerabilities in authentication and payment code",
+  "trigger": {
+    "type": "onSave",
+    "filePattern": "{backend/src/{controllers,middleware,services}/**/*.ts,frontend/src/{app,components}/**/*.{ts,tsx}}"
+  },
+  "prompt": "Perform security audit focusing on:\n\nBackend:\n1. JWT token handling and refresh token rotation\n2. Password hashing and validation\n3. SQL injection prevention (Prisma usage)\n4. XSS and CSRF protection\n5. Rate limiting on sensitive endpoints\n6. Crypto payment processing security\n7. Environment variable exposure\n8. Input validation and sanitization\n\nFrontend:\n1. Sensitive data in localStorage/sessionStorage\n2. API keys or secrets in client code\n3. Proper CORS configuration\n4. XSS vulnerabilities in user-generated content\n5. Secure cookie handling\n\nFor this crypto payment platform, pay special attention to:\n- Payment processing endpoints\n- Wallet address validation\n- Transaction verification\n- User authentication flows\n\nFlag any security issues with severity level and provide fixes."
+}

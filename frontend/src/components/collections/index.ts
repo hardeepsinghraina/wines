@@ -1,0 +1,1 @@
+export { CollectionsClient } from './CollectionsClient';

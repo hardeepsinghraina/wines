@@ -1,0 +1,627 @@
+// Luxury Wine Crypto E-commerce Database Schema
+// This schema defines all the data models for the wine e-commerce platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  dateOfBirth   DateTime?
+  role          UserRole @default(CUSTOMER)
+  isActive      Boolean  @default(true)
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  addresses     Address[]
+  cart          Cart?
+  orders        Order[]
+  reviews       Review[]
+  preferences   UserPreferences?
+  loyaltyStatus LoyaltyStatus?
+  sessions      UserSession[]
+  privateSaleAccesses PrivateSaleAccess[]
+  privateSalePurchases PrivateSalePurchase[]
+  affiliateProgram AffiliateProgram?
+  affiliateReferrals AffiliateReferral[]
+  loyaltyTransactions LoyaltyTransaction[]
+
+  @@map("users")
+}
+
+model UserPreferences {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  preferredRegions  String[] // Wine regions
+  preferredTypes    String[] // Wine types
+  priceRangeMin     Float?
+  priceRangeMax     Float?
+  newsletterOptIn   Boolean  @default(false)
+  marketingOptIn    Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Address {
+  id         String      @id @default(cuid())
+  userId     String
+  type       AddressType
+  firstName  String
+  lastName   String
+  company    String?
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String
+  phone      String?
+  isDefault  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("addresses")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  sessionToken String   @unique
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+// Wine Product Management
+model Wine {
+  id              String   @id @default(cuid())
+  name            String
+  producer        String
+  region          String
+  vintage         Int
+  category        String
+  description     String
+  tastingNotes    String?
+  alcoholContent  Float
+  bottleSize      String   @default("750ml")
+  sku             String   @unique
+  isActive        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  isNftAvailable  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  prices       WinePrice[]
+  inventory    WineInventory[]
+  images       WineImage[]
+  specifications WineSpecification?
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+  reviews      Review[]
+  nfts         WineNFT[]
+  privateSales PrivateSale[]
+  privateSalePurchases PrivateSalePurchase[]
+
+  @@map("wines")
+}
+
+model WinePrice {
+  id        String   @id @default(cuid())
+  wineId    String
+  currency  String   // USD, EUR, BTC, ETH, etc.
+  price     Decimal  @db.Decimal(18, 8)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@unique([wineId, currency])
+  @@map("wine_prices")
+}
+
+model WineInventory {
+  id            String   @id @default(cuid())
+  wineId        String
+  quantity      Int
+  reservedQty   Int      @default(0)
+  location      String   @default("main_warehouse")
+  lastRestocked DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@unique([wineId, location])
+  @@map("wine_inventory")
+}
+
+model WineImage {
+  id        String   @id @default(cuid())
+  wineId    String
+  url       String
+  altText   String?
+  isPrimary Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@map("wine_images")
+}
+
+model WineSpecification {
+  id           String   @id @default(cuid())
+  wineId       String   @unique
+  grapeVariety String[]
+  servingTemp  String?
+  agingPotential String?
+  foodPairing  String?
+  awards       String[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@map("wine_specifications")
+}
+
+// Shopping Cart Management
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String?  // Null for guest carts
+  sessionId String?  // For guest cart identification
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@unique([userId])
+  @@unique([sessionId])
+  @@map("carts")
+}
+
+model CartItem {
+  id         String   @id @default(cuid())
+  cartId     String
+  wineId     String
+  quantity   Int
+  addedAt    DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  wine Wine @relation(fields: [wineId], references: [id])
+
+  @@unique([cartId, wineId])
+  @@map("cart_items")
+}
+
+// Order Management
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  orderNumber     String      @unique
+  status          OrderStatus @default(PENDING)
+  subtotal        Decimal     @db.Decimal(10, 2)
+  shippingCost    Decimal     @db.Decimal(10, 2)
+  taxAmount       Decimal     @db.Decimal(10, 2)
+  totalAmount     Decimal     @db.Decimal(10, 2)
+  currency        String      @default("USD")
+  shippingAddressId String
+  billingAddressId  String?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  user            User        @relation(fields: [userId], references: [id])
+  shippingAddress Address     @relation(fields: [shippingAddressId], references: [id])
+  items           OrderItem[]
+  payments        Payment[]
+  shipping        Shipping?
+  affiliateCommissions AffiliateCommission[]
+  loyaltyTransactions LoyaltyTransaction[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String  @id @default(cuid())
+  orderId    String
+  wineId     String
+  quantity   Int
+  unitPrice  Decimal @db.Decimal(10, 2)
+  totalPrice Decimal @db.Decimal(10, 2)
+  currency   String  @default("USD")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  wine  Wine  @relation(fields: [wineId], references: [id])
+
+  @@map("order_items")
+}
+
+// Payment Management
+model Payment {
+  id                String        @id @default(cuid())
+  orderId           String
+  method            PaymentMethod
+  status            PaymentStatus @default(PENDING)
+  currency          String
+  amount            Decimal       @db.Decimal(18, 8)
+  cryptoAmount      Decimal?      @db.Decimal(18, 8)
+  cryptoCurrency    String?
+  transactionId     String?       @unique
+  transactionHash   String?
+  paymentAddress    String?
+  expiresAt         DateTime?
+  processorResponse Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  order           Order            @relation(fields: [orderId], references: [id])
+  cryptoDetails   CryptoPayment?
+
+  @@map("payments")
+}
+
+model CryptoPayment {
+  id              String   @id @default(cuid())
+  paymentId       String   @unique
+  cryptocurrency  String   // BTC, ETH, etc.
+  walletAddress   String
+  blockchainTxId  String?
+  confirmations   Int      @default(0)
+  requiredConfirmations Int @default(3)
+  exchangeRate    Decimal  @db.Decimal(18, 8)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("crypto_payments")
+}
+
+// Shipping Management
+model Shipping {
+  id              String         @id @default(cuid())
+  orderId         String         @unique
+  carrier         String
+  trackingNumber  String?
+  method          String
+  status          ShippingStatus @default(PENDING)
+  estimatedDelivery DateTime?
+  actualDelivery  DateTime?
+  isInsured       Boolean        @default(false)
+  insuranceAmount Decimal?       @db.Decimal(10, 2)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("shipping")
+}
+
+// NFT and Exclusive Features
+model NFTCollection {
+  id              String   @id @default(cuid())
+  name            String
+  description     String
+  contractAddress String   @unique
+  blockchain      String   @default("ethereum")
+  totalSupply     Int
+  mintedCount     Int      @default(0)
+  floorPrice      Decimal  @db.Decimal(18, 8) @default(0)
+  coverImage      String
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  nfts WineNFT[]
+
+  @@map("nft_collections")
+}
+
+model WineNFT {
+  id                String   @id @default(cuid())
+  wineId            String
+  collectionId      String
+  tokenId           String   @unique
+  contractAddress   String
+  blockchain        String   @default("ethereum")
+  ownerAddress      String
+  mintedAt          DateTime
+  transactionHash   String
+  metadata          Json
+  digitalCertificate Json
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  wine       Wine          @relation(fields: [wineId], references: [id])
+  collection NFTCollection @relation(fields: [collectionId], references: [id])
+
+  @@map("wine_nfts")
+}
+
+model BlockchainTransaction {
+  id              String   @id @default(cuid())
+  transactionHash String?
+  blockchain      String
+  fromAddress     String
+  toAddress       String
+  contractAddress String
+  tokenId         String?
+  status          String   @default("pending")
+  gasUsed         Int?
+  gasPrice        String?
+  blockNumber     Int?
+  confirmations   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("blockchain_transactions")
+}
+
+// Private Sales System
+model PrivateSale {
+  id                  String   @id @default(cuid())
+  wineId              String
+  title               String
+  description         String
+  startDate           DateTime
+  endDate             DateTime
+  maxQuantity         Int
+  soldQuantity        Int      @default(0)
+  price               Decimal  @db.Decimal(10, 2)
+  currency            String   @default("USD")
+  eligibilityCriteria Json
+  isActive            Boolean  @default(true)
+  isExclusive         Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  wine      Wine                    @relation(fields: [wineId], references: [id])
+  accesses  PrivateSaleAccess[]
+  purchases PrivateSalePurchase[]
+
+  @@map("private_sales")
+}
+
+model PrivateSaleAccess {
+  id            String    @id @default(cuid())
+  userId        String
+  privateSaleId String
+  accessGranted Boolean   @default(true)
+  accessReason  String
+  grantedAt     DateTime  @default(now())
+  expiresAt     DateTime?
+
+  user        User        @relation(fields: [userId], references: [id])
+  privateSale PrivateSale @relation(fields: [privateSaleId], references: [id])
+
+  @@unique([userId, privateSaleId])
+  @@map("private_sale_accesses")
+}
+
+model PrivateSalePurchase {
+  id            String   @id @default(cuid())
+  userId        String
+  privateSaleId String
+  wineId        String
+  quantity      Int
+  unitPrice     Decimal  @db.Decimal(10, 2)
+  totalPrice    Decimal  @db.Decimal(10, 2)
+  currency      String   @default("USD")
+  status        String   @default("pending")
+  purchasedAt   DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id])
+  privateSale PrivateSale @relation(fields: [privateSaleId], references: [id])
+  wine        Wine        @relation(fields: [wineId], references: [id])
+
+  @@map("private_sale_purchases")
+}
+
+// Affiliate Program
+model AffiliateProgram {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  affiliateCode  String   @unique
+  commissionRate Decimal  @db.Decimal(5, 2) @default(5.0)
+  totalEarnings  Decimal  @db.Decimal(10, 2) @default(0)
+  totalReferrals Int      @default(0)
+  isActive       Boolean  @default(true)
+  joinedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user        User                  @relation(fields: [userId], references: [id])
+  referrals   AffiliateReferral[]
+  commissions AffiliateCommission[]
+
+  @@map("affiliate_programs")
+}
+
+model AffiliateReferral {
+  id                  String    @id @default(cuid())
+  affiliateId         String
+  referredUserId      String
+  referralCode        String
+  status              String    @default("pending")
+  firstPurchaseAmount Decimal?  @db.Decimal(10, 2)
+  commissionEarned    Decimal?  @db.Decimal(10, 2)
+  referredAt          DateTime  @default(now())
+  confirmedAt         DateTime?
+
+  affiliate    AffiliateProgram      @relation(fields: [affiliateId], references: [id])
+  referredUser User                  @relation(fields: [referredUserId], references: [id])
+  commissions  AffiliateCommission[]
+
+  @@unique([affiliateId, referredUserId])
+  @@map("affiliate_referrals")
+}
+
+model AffiliateCommission {
+  id               String   @id @default(cuid())
+  affiliateId      String
+  referralId       String
+  orderId          String
+  commissionAmount Decimal  @db.Decimal(10, 2)
+  commissionRate   Decimal  @db.Decimal(5, 2)
+  orderAmount      Decimal  @db.Decimal(10, 2)
+  status           String   @default("pending")
+  earnedAt         DateTime @default(now())
+  paidAt           DateTime?
+
+  affiliate AffiliateProgram  @relation(fields: [affiliateId], references: [id])
+  referral  AffiliateReferral @relation(fields: [referralId], references: [id])
+  order     Order             @relation(fields: [orderId], references: [id])
+
+  @@map("affiliate_commissions")
+}
+
+// Loyalty Program
+model LoyaltyTransaction {
+  id          String    @id @default(cuid())
+  userId      String
+  type        String    // earned, redeemed, expired, bonus
+  points      Int
+  description String
+  orderId     String?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user  User   @relation(fields: [userId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@map("loyalty_transactions")
+}
+
+model LoyaltyReward {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  pointsCost  Int
+  rewardType  String    // discount, free_shipping, product, experience
+  rewardValue Decimal   @db.Decimal(10, 2)
+  isActive    Boolean   @default(true)
+  validUntil  DateTime?
+  usageLimit  Int?
+  usedCount   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("loyalty_rewards")
+}
+
+model LoyaltyStatus {
+  id            String      @id @default(cuid())
+  userId        String      @unique
+  tier          LoyaltyTier @default(BRONZE)
+  points        Int         @default(0)
+  totalSpent    Decimal     @db.Decimal(10, 2) @default(0)
+  joinedAt      DateTime    @default(now())
+  lastActivity  DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("loyalty_status")
+}
+
+// Reviews and Ratings
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  wineId    String
+  rating    Int      // 1-5 stars
+  title     String?
+  comment   String?
+  isVerified Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  wine Wine @relation(fields: [wineId], references: [id])
+
+  @@unique([userId, wineId])
+  @@map("reviews")
+}
+
+// Enums
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AddressType {
+  BILLING
+  SHIPPING
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CRYPTO
+  CREDIT_CARD
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum ShippingStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  IN_TRANSIT
+  DELIVERED
+  EXCEPTION
+}
+
+enum LoyaltyTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Crypto Payment Code Validator",
+  "description": "Specialized validation for cryptocurrency payment processing code",
+  "trigger": {
+    "type": "onSave",
+    "filePattern": "backend/src/{services,controllers}/payment*.ts"
+  },
+  "prompt": "Review cryptocurrency payment code for:\n1. Proper wallet address validation for each crypto (BTC, ETH, SOL, DOGE, LITE, USDC, USDT)\n2. Transaction confirmation handling and retry logic\n3. Real-time rate fetching with fallback mechanisms\n4. Proper error handling for blockchain API failures\n5. Transaction timeout handling\n6. Webhook security for payment confirmations\n7. Idempotency for payment operations\n8. Proper logging for audit trails\n9. Currency conversion accuracy\n10. Gas fee calculations for ETH-based tokens\n\nCritical checks:\n- Never expose private keys or API secrets\n- Validate all amounts before processing\n- Implement proper transaction status tracking\n- Handle network congestion scenarios\n- Verify payment amounts match order totals\n\nProvide security and reliability improvements."
+}

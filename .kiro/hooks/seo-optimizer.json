@@ -1,0 +1,9 @@
+{
+  "name": "SEO Optimization Check",
+  "description": "Ensure Next.js pages are optimized for search engines",
+  "trigger": {
+    "type": "onSave",
+    "filePattern": "frontend/src/app/**/page.tsx"
+  },
+  "prompt": "Analyze Next.js page for SEO:\n1. Missing or incomplete metadata (title, description, OG tags)\n2. Improper heading hierarchy (h1, h2, h3)\n3. Missing structured data (JSON-LD for products, reviews)\n4. Image optimization (next/image usage)\n5. Missing canonical URLs\n6. Slow loading resources blocking render\n7. Missing sitemap generation for dynamic routes\n\nFor this luxury wine e-commerce:\n- Product pages need rich snippets (Product schema)\n- Wine details should include AggregateRating schema\n- Prices should be marked up with proper currency\n- Breadcrumbs should be implemented\n- Meta descriptions should be compelling for luxury market\n\nProvide SEO improvements with Next.js 14 App Router best practices."
+}

@@ -1,0 +1,8 @@
+{
+  "name": "🚀 Full Performance Audit",
+  "description": "Manual trigger: Comprehensive performance analysis of the entire application",
+  "trigger": {
+    "type": "manual"
+  },
+  "prompt": "Perform a comprehensive performance audit:\n\n1. **Frontend Performance:**\n   - Analyze bundle sizes (run: npm run build in frontend)\n   - Check for unused dependencies\n   - Review Core Web Vitals optimization\n   - Identify render-blocking resources\n   - Check image optimization across the site\n   - Review React component re-render patterns\n\n2. **Backend Performance:**\n   - Analyze API response times\n   - Check database query performance\n   - Review caching strategy (Redis usage)\n   - Identify slow endpoints\n   - Check for memory leaks\n\n3. **Infrastructure:**\n   - Review Docker configuration efficiency\n   - Check CDN usage for static assets\n   - Analyze database connection pooling\n   - Review rate limiting configuration\n\n4. **Luxury E-commerce Specific:**\n   - Product image loading strategy\n   - Checkout flow performance\n   - Payment processing speed\n   - NFT minting performance\n\nProvide prioritized list of improvements with estimated impact."
+}

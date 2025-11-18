@@ -1,0 +1,9 @@
+{
+  "name": "Frontend Bundle Size Check",
+  "description": "Monitor component imports and suggest code splitting to reduce bundle size",
+  "trigger": {
+    "type": "onSave",
+    "filePattern": "frontend/src/{app,components}/**/*.{ts,tsx}"
+  },
+  "prompt": "Review the React component and check for:\n1. Heavy library imports that should be dynamically imported (framer-motion, charts, etc.)\n2. Unused imports that increase bundle size\n3. Opportunities for React.lazy() and Suspense\n4. Large inline data that should be moved to separate files\n5. Missing tree-shaking opportunities\n6. Duplicate dependencies across components\n\nFor this Next.js 14 luxury wine platform:\n- Product pages should use dynamic imports for heavy components\n- Payment components should be code-split\n- Admin dashboard should be lazy-loaded\n- Animations should not block initial render\n\nSuggest specific optimizations with code examples."
+}

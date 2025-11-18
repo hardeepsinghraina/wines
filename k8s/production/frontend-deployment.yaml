@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: luxurywines-production
+  labels:
+    app: luxurywines-frontend
+    environment: production
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: luxurywines-frontend
+  template:
+    metadata:
+      labels:
+        app: luxurywines-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: ghcr.io/luxurywines/luxurywines-frontend:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          value: "https://api.luxurywines.com"
+        - name: NEXT_PUBLIC_APP_URL
+          value: "https://luxurywines.com"
+        - name: NEXT_PUBLIC_CDN_URL
+          value: "https://cdn.luxurywines.com"
+        - name: NEXT_PUBLIC_IMAGES_DOMAIN
+          value: "images.luxurywines.com"
+        - name: NEXT_PUBLIC_ENABLE_NFT_FEATURES
+          value: "true"
+        - name: NEXT_PUBLIC_ENABLE_PRIVATE_SALES
+          value: "true"
+        - name: NEXT_PUBLIC_ENABLE_AFFILIATE_PROGRAM
+          value: "true"
+        - name: NEXT_PUBLIC_ENABLE_SERVICE_WORKER
+          value: "true"
+        - name: NEXT_PUBLIC_CACHE_MAX_AGE
+          value: "3600"
+        - name: NEXT_PUBLIC_SUPPORT_EMAIL
+          value: "support@luxurywines.com"
+        - name: NEXT_PUBLIC_SUPPORT_PHONE
+          value: "+1-800-WINE-CRYPTO"
+        envFrom:
+        - secretRef:
+            name: frontend-secrets
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: nextjs-cache
+          mountPath: /app/.next/cache
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: nextjs-cache
+        emptyDir: {}
+      imagePullSecrets:
+      - name: ghcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: luxurywines-production
+  labels:
+    app: luxurywines-frontend
+spec:
+  selector:
+    app: luxurywines-frontend
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: frontend-secrets
+  namespace: luxurywines-production
+type: Opaque
+stringData:
+
+  NEXT_PUBLIC_COINBASE_API_KEY: "your-coinbase-api-key-here"
+  NEXT_PUBLIC_GA_TRACKING_ID: "G-XXXXXXXXXX"
+  NEXT_PUBLIC_SENTRY_DSN: "https://your-sentry-dsn-here"
+  NEXT_PUBLIC_RECAPTCHA_SITE_KEY: "your-recaptcha-site-key-here"
+  NEXT_PUBLIC_FACEBOOK_APP_ID: "your-facebook-app-id"
+  NEXT_PUBLIC_TWITTER_HANDLE: "@luxurywines"

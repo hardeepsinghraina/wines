@@ -1,0 +1,9 @@
+{
+  "name": "Accessibility Compliance Check",
+  "description": "Ensure components meet WCAG 2.1 AA standards for luxury e-commerce",
+  "trigger": {
+    "type": "onSave",
+    "filePattern": "frontend/src/components/**/*.tsx"
+  },
+  "prompt": "Check React component for accessibility:\n1. Missing alt text on images (critical for wine product photos)\n2. Insufficient color contrast for luxury dark themes\n3. Missing ARIA labels on interactive elements\n4. Keyboard navigation support\n5. Focus management in modals and forms\n6. Screen reader compatibility\n7. Form validation error announcements\n8. Semantic HTML usage\n\nFor this luxury wine platform:\n- Product cards must be keyboard navigable\n- Payment forms must have proper labels and error handling\n- Checkout flow must be accessible\n- Price displays must be screen-reader friendly\n- Image galleries must support keyboard navigation\n\nProvide specific accessibility improvements with code examples."
+}

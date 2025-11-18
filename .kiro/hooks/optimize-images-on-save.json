@@ -1,0 +1,9 @@
+{
+  "name": "Optimize Images on Save",
+  "description": "Automatically check and suggest optimizations for image files to improve page load times",
+  "trigger": {
+    "type": "onSave",
+    "filePattern": "**/*.{jpg,jpeg,png,webp,svg}"
+  },
+  "prompt": "Analyze the saved image file and:\n1. Check file size and suggest compression if > 500KB\n2. Recommend WebP format if not already used\n3. Suggest responsive image sizes for wine product photos\n4. Verify image dimensions are appropriate for luxury e-commerce (min 1200px width for product images)\n5. Check if lazy loading is implemented where this image is used\n\nProvide actionable recommendations to improve performance while maintaining luxury aesthetic quality."
+}

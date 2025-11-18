@@ -1,0 +1,9 @@
+{
+  "name": "TypeScript Strict Mode Validator",
+  "description": "Ensure TypeScript strict mode compliance and type safety",
+  "trigger": {
+    "type": "onSave",
+    "filePattern": "**/*.{ts,tsx}"
+  },
+  "prompt": "Validate TypeScript code for:\n1. Any 'any' types that should be properly typed\n2. Missing return types on functions\n3. Implicit type coercion issues\n4. Nullable types without proper checks\n5. Missing interface definitions for API responses\n6. Type assertions that could be avoided\n7. Enum vs const enum usage for performance\n\nFor this luxury wine platform:\n- Product types should be strictly defined\n- Payment types must be comprehensive\n- API response types should match backend\n- Crypto currency types should be type-safe\n\nSuggest type improvements and shared type definitions."
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Test</title>
+</head>
+<body>
+    <h1>CORS Test</h1>
+    <button onclick="testAPI()">Test API Call</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/products/categories', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-Agent': navigator.userAgent,
+                        'X-Client-Version': '1.0.0',
+                        'X-Client-Platform': 'web'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = '<h3>Success!</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    resultDiv.innerHTML = '<h3>Error: ' + response.status + '</h3><p>' + response.statusText + '</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<h3>Error:</h3><p>' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

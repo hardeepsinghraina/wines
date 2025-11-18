@@ -1,0 +1,8 @@
+{
+  "name": "✨ Code Quality Review",
+  "description": "Manual trigger: Review code quality, patterns, and best practices",
+  "trigger": {
+    "type": "manual"
+  },
+  "prompt": "Conduct comprehensive code quality review:\n\n1. **Architecture Review:**\n   - Component organization and reusability\n   - Service layer separation\n   - API design consistency\n   - State management patterns\n   - Error handling consistency\n\n2. **Code Standards:**\n   - TypeScript usage and type safety\n   - ESLint compliance\n   - Naming conventions adherence\n   - Code duplication identification\n   - Comment quality and documentation\n\n3. **Testing Coverage:**\n   - Identify untested critical paths\n   - Review test quality\n   - Check for missing E2E tests\n   - API endpoint test coverage\n\n4. **Luxury Platform Specific:**\n   - Consistent luxury aesthetic implementation\n   - Payment flow code quality\n   - NFT integration patterns\n   - Admin dashboard code organization\n\nProvide actionable improvements with code examples."
+}

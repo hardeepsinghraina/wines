@@ -1,0 +1,9 @@
+{
+  "name": "API Performance Check",
+  "description": "Review API endpoints for performance issues and optimization opportunities",
+  "trigger": {
+    "type": "onSave",
+    "filePattern": "backend/src/{controllers,routes}/**/*.ts"
+  },
+  "prompt": "Analyze the API endpoint code and check for:\n1. Missing database query optimizations (N+1 queries, missing indexes)\n2. Lack of caching strategies (Redis integration)\n3. Missing pagination for list endpoints\n4. Inefficient data fetching patterns\n5. Missing rate limiting or security middleware\n6. Response payload size optimization opportunities\n7. Async/await error handling best practices\n\nFor this luxury wine e-commerce platform, prioritize:\n- Product catalog endpoints (should be cached)\n- Payment processing endpoints (must be secure and fast)\n- NFT-related endpoints (blockchain calls should be optimized)\n\nProvide specific code improvements."
+}

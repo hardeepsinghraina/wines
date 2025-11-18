@@ -1,0 +1,819 @@
+// Simplified SQLite schema for development
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  dateOfBirth   DateTime?
+  role          String   @default("USER")
+  emailVerified Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  
+  // Security fields
+  lastLoginAt   DateTime?
+  failedLoginAttempts Int @default(0)
+  lockedUntil   DateTime?
+  passwordChangedAt DateTime @default(now())
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  sessions      UserSession[]
+  orders        Order[]
+  cartItems     CartItem[]
+  addresses     Address[]
+  preferences   UserPreferences?
+  affiliate     Affiliate?
+  loyaltyMember LoyaltyMember?
+  reviews       WineReview[]
+
+  @@map("users")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  sessionToken String   @unique
+  refreshToken String
+  expiresAt    DateTime
+  
+  // Security tracking
+  ipAddress    String?
+  userAgent    String?
+  lastActivity DateTime @default(now())
+  isActive     Boolean  @default(true)
+  
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model UserPreferences {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  preferredRegions String   // JSON string for SQLite
+  preferredTypes   String   // JSON string for SQLite
+  priceRangeMin    Float?
+  priceRangeMax    Float?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+// Premium Product Management
+model Wine {
+  id              String   @id @default(cuid())
+  name            String
+  producer        String   @default("Premium Producer")
+  description     String
+  region          String
+  appellation     String?  // Premium attribute for specific wine region designation
+  vintage         Int
+  category        String   @default("Red Wine")
+  categoryId      String?  // Reference to category hierarchy
+  tastingNotes    String?
+  alcoholContent  Float    @default(13.5)
+  bottleSize      String   @default("750ml")
+  sku             String   @unique
+  
+  // Premium pricing structure
+  originalPrice   Float    // Original price before discount
+  currentPrice    Float    // Current selling price
+  discountPercent Float?   // Discount percentage (e.g., 80 for 80% off)
+  currency        String   @default("EUR")
+  
+  // Premium attributes
+  terroir         String?  // Soil and climate characteristics
+  winemaker       String?  // Winemaker name
+  estate          String?  // Estate or vineyard name
+  classification  String?  // AOC, DOC, AVA classifications
+  servingTemp     String?  // Optimal serving temperature
+  agingPotential  String?  // How long wine can age
+  harvestDate     DateTime? // Date of harvest
+  bottlingDate    DateTime? // Date of bottling
+  releaseDate     DateTime? // Date of release
+  
+  // Status and availability
+  stock           Int      @default(0)
+  isActive        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  isLimitedEdition Boolean @default(false)
+  isNftAvailable  Boolean  @default(false)
+  isPreOrder      Boolean  @default(false)
+  availableFrom   DateTime? // When product becomes available
+  
+  // Legacy fields for compatibility
+  price           Float?   // Deprecated, use currentPrice
+  imageUrl        String?  // Deprecated, use images relation
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  productCategory ProductCategory? @relation(fields: [categoryId], references: [id])
+  cartItems       CartItem[]
+  orderItems      OrderItem[]
+  specification   WineSpecification?
+  nftCollection   NFTCollection?
+  prices          WinePrice[]
+  inventory       WineInventory[]
+  images          WineImage[]
+  variants        WineVariant[]
+  reviews         WineReview[]
+  seo             WineSEO?
+  certifications  ProductCertification[]
+  awards          ProductAward[]
+  recommendations ProductRecommendation[] @relation("SourceProduct")
+  targetRecommendations ProductRecommendation[] @relation("TargetProduct")
+
+  @@map("wines")
+}
+
+// Product Category Hierarchy
+model ProductCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  parentId    String?  // For hierarchical categories
+  level       Int      @default(0) // 0 = root, 1 = subcategory, etc.
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  
+  // SEO and display
+  metaTitle       String?
+  metaDescription String?
+  imageUrl        String?
+  iconUrl         String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  parent      ProductCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    ProductCategory[] @relation("CategoryHierarchy")
+  wines       Wine[]
+
+  @@map("product_categories")
+}
+
+model WineSpecification {
+  id           String   @id @default(cuid())
+  wineId       String   @unique
+  grapeVariety String   // JSON string for SQLite
+  alcoholContent Float?
+  servingTemp  String?
+  tastingNotes String?
+  foodPairing  String?
+  awards       String   // JSON string for SQLite - deprecated, use ProductAward
+  
+  // Enhanced premium specifications
+  ph           Float?   // Wine pH level
+  residualSugar Float?  // Grams per liter
+  tannins      String?  // Low, Medium, High
+  acidity      String?  // Low, Medium, High
+  body         String?  // Light, Medium, Full
+  finish       String?  // Short, Medium, Long
+  oakTreatment String?  // None, Light, Medium, Heavy
+  malolacticFermentation Boolean? // Whether MLF was performed
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@map("wine_specifications")
+}
+
+// Order Management
+model Order {
+  id                String      @id @default(cuid())
+  userId            String
+  orderNumber       String      @unique
+  status            String      @default("PENDING")
+  subtotal          Float
+  shippingCost      Float
+  taxAmount         Float
+  totalAmount       Float
+  currency          String      @default("EUR")
+  shippingAddressId String?
+  billingAddressId  String?
+  notes             String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relations
+  user              User          @relation(fields: [userId], references: [id])
+  items             OrderItem[]
+  payment           Payment?
+  shipping          Shipping?
+  shippingAddress   Address?      @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
+  billingAddress    Address?      @relation("BillingAddress", fields: [billingAddressId], references: [id])
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  wineId     String
+  quantity   Int
+  unitPrice  Float
+  totalPrice Float
+  createdAt  DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  wine  Wine  @relation(fields: [wineId], references: [id])
+
+  @@map("order_items")
+}
+
+// Payment Management
+model Payment {
+  id               String   @id @default(cuid())
+  orderId          String   @unique
+  method           String   // Changed from paymentMethod to match service
+  status           String   @default("PENDING")
+  currency         String
+  amount           Float
+  cryptoAmount     Float?
+  cryptoCurrency   String?
+  transactionHash  String?
+  paymentAddress   String?  // Changed from walletAddress to match service
+  expiresAt        DateTime? // Added missing field
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// Cart Management
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String?  // Optional for guest users
+  sessionId String?  // For guest cart sessions
+  wineId    String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wine Wine  @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, wineId])
+  @@unique([sessionId, wineId])
+  @@map("cart_items")
+}
+
+// Address Management
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  firstName  String
+  lastName   String
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String
+  isDefault  Boolean  @default(false)
+  type       String   @default("SHIPPING") // SHIPPING, BILLING, BOTH
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shippingOrders    Order[] @relation("ShippingAddress")
+  billingOrders     Order[] @relation("BillingAddress")
+
+  @@map("addresses")
+}
+
+// Shipping Management
+model Shipping {
+  id                String   @id @default(cuid())
+  orderId           String   @unique
+  carrier           String
+  method            String
+  trackingNumber    String?  @unique
+  status            String   @default("PENDING")
+  estimatedDelivery DateTime?
+  actualDelivery    DateTime?
+  isInsured         Boolean  @default(false)
+  insuranceAmount   Float?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  trackingEvents  TrackingEvent[]
+
+  @@map("shipping")
+}
+
+model TrackingEvent {
+  id             String   @id @default(cuid())
+  trackingNumber String
+  status         String
+  location       String?
+  description    String
+  timestamp      DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  shipping Shipping @relation(fields: [trackingNumber], references: [trackingNumber], onDelete: Cascade)
+
+  @@map("tracking_events")
+}
+
+// NFT Management
+model NFTCollection {
+  id          String   @id @default(cuid())
+  wineId      String   @unique
+  name        String
+  description String
+  totalSupply Int
+  mintedCount Int      @default(0)
+  floorPrice  Float    @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@map("nft_collections")
+}
+
+// Affiliate System
+model Affiliate {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  affiliateCode  String   @unique
+  commissionRate Float    @default(5.0)
+  totalEarnings  Float    @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("affiliates")
+}
+
+// Loyalty System
+model LoyaltyMember {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  tier       String   @default("BRONZE")
+  points     Int      @default(0)
+  totalSpent Float    @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("loyalty_members")
+}
+
+// Security and Audit Models
+model SecurityEvent {
+  id          String   @id @default(cuid())
+  type        String   // FAILED_LOGIN, XSS_ATTEMPT, etc.
+  severity    String   // LOW, MEDIUM, HIGH, CRITICAL
+  ipAddress   String
+  userAgent   String?
+  userId      String?
+  email       String?
+  endpoint    String?
+  method      String?
+  payload     String?  // JSON string
+  requestId   String?
+  resolved    Boolean  @default(false)
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@map("security_events")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, etc.
+  resource    String   // USER, ORDER, PAYMENT, etc.
+  resourceId  String?
+  userId      String?
+  ipAddress   String
+  userAgent   String?
+  oldValues   String?  // JSON string
+  newValues   String?  // JSON string
+  success     Boolean  @default(true)
+  errorMessage String?
+  requestId   String?
+  sessionId   String?
+  createdAt   DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String
+  keyHash     String   @unique
+  permissions String   // JSON array of permissions
+  isActive    Boolean  @default(true)
+  lastUsedAt  DateTime?
+  usageCount  Int      @default(0)
+  expiresAt   DateTime?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("api_keys")
+}
+
+// Advanced Product Management Models
+model WinePrice {
+  id                 String   @id @default(cuid())
+  wineId             String
+  currency           String
+  
+  // Enhanced pricing structure
+  originalPrice      Float    // MSRP or original price
+  currentPrice       Float    // Current selling price
+  costPrice          Float?   // Cost basis for margin calculation
+  
+  // Discount management
+  discountType       String?  // PERCENTAGE, FIXED_AMOUNT, BULK, SEASONAL
+  discountValue      Float?   // Percentage or fixed amount
+  discountStartDate  DateTime?
+  discountEndDate    DateTime?
+  
+  // Pricing tiers
+  tier               String   @default("STANDARD") // STANDARD, VIP, WHOLESALE
+  minQuantity        Int      @default(1)
+  maxQuantity        Int?
+  
+  // Status and metadata
+  isActive           Boolean  @default(true)
+  isPromotion        Boolean  @default(false)
+  promotionCode      String?
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@unique([wineId, currency, tier])
+  @@map("wine_prices")
+}
+
+model WineInventory {
+  id                String    @id @default(cuid())
+  wineId            String
+  
+  // Inventory quantities
+  quantity          Int       @default(0)
+  reservedQty       Int       @default(0)
+  availableQty      Int       @default(0) // Calculated: quantity - reservedQty
+  damagedQty        Int       @default(0)
+  
+  // Location and storage
+  location          String    @default("main_warehouse")
+  warehouse         String?   // Specific warehouse identifier
+  zone              String?   // Storage zone within warehouse
+  temperature       Float?    // Storage temperature
+  humidity          Float?    // Storage humidity
+  
+  // Inventory management
+  lowStockThreshold Int       @default(10)
+  reorderPoint      Int       @default(5)
+  maxStockLevel     Int?      // Maximum stock to maintain
+  
+  // Tracking dates
+  lastRestocked     DateTime?
+  lastSold          DateTime?
+  lastInventoryCheck DateTime?
+  expiryDate        DateTime? // For products with expiration
+  
+  // Batch and lot tracking
+  batchNumber       String?
+  lotNumber         String?
+  supplierRef       String?   // Supplier reference number
+  
+  // Cost tracking
+  unitCost          Float?    // Cost per unit
+  totalValue        Float?    // Total inventory value
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@unique([wineId, location])
+  @@map("wine_inventory")
+}
+
+model WineImage {
+  id          String   @id @default(cuid())
+  wineId      String
+  
+  // Image details
+  url         String
+  filename    String?  // Original filename
+  altText     String?
+  title       String?  // Image title for SEO
+  caption     String?  // Image caption
+  
+  // Image properties
+  width       Int?     // Image width in pixels
+  height      Int?     // Image height in pixels
+  fileSize    Int?     // File size in bytes
+  mimeType    String?  // image/jpeg, image/png, etc.
+  
+  // Image types and organization
+  type        String   @default("PRODUCT") // PRODUCT, LABEL, LIFESTYLE, VINEYARD, PROCESS
+  isPrimary   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  
+  // Image variants for responsive design
+  thumbnailUrl String? // Thumbnail version
+  mediumUrl    String? // Medium size version
+  largeUrl     String? // Large size version
+  
+  // SEO and metadata
+  seoScore    Float?   // SEO optimization score
+  tags        String?  // JSON array of tags
+  
+  // Status
+  isActive    Boolean  @default(true)
+  isProcessed Boolean  @default(false) // Whether image processing is complete
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@map("wine_images")
+}
+
+model WineVariant {
+  id            String   @id @default(cuid())
+  wineId        String
+  name          String
+  sku           String   @unique
+  
+  // Variant attributes
+  bottleSize    String   // 375ml, 750ml, 1.5L, 3L, etc.
+  packaging     String?  // Single, Gift Box, Wooden Case, etc.
+  format        String?  // Standard, Magnum, Double Magnum, etc.
+  
+  // Pricing
+  originalPrice Float    // Original price for this variant
+  currentPrice  Float    // Current selling price
+  priceModifier Float    @default(0) // Price difference from base product
+  
+  // Inventory
+  stockQuantity Int      @default(0)
+  reservedQty   Int      @default(0)
+  
+  // Status
+  isActive      Boolean  @default(true)
+  isDefault     Boolean  @default(false) // Default variant for the product
+  
+  // Additional attributes (JSON for flexibility)
+  attributes    String   // JSON string for SQLite
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@map("wine_variants")
+}
+
+model WineReview {
+  id                 String   @id @default(cuid())
+  wineId             String
+  userId             String
+  
+  // Review content
+  rating             Int      // 1-5 stars
+  title              String?
+  comment            String
+  
+  // Detailed ratings (optional)
+  tasteRating        Int?     // 1-5 for taste
+  aromaRating        Int?     // 1-5 for aroma
+  appearanceRating   Int?     // 1-5 for appearance
+  valueRating        Int?     // 1-5 for value
+  
+  // Review metadata
+  status             String   @default("pending") // pending, approved, rejected, flagged
+  isVerifiedPurchase Boolean  @default(false)
+  purchaseDate       DateTime? // Date of purchase if verified
+  
+  // Community interaction
+  helpfulVotes       Int      @default(0)
+  unhelpfulVotes     Int      @default(0)
+  reportCount        Int      @default(0)
+  responseCount      Int      @default(0) // Number of responses to this review
+  
+  // Moderation
+  moderatorNotes     String?
+  moderatedBy        String?  // User ID of moderator
+  moderatedAt        DateTime?
+  
+  // Review quality metrics
+  qualityScore       Float?   // Calculated quality score
+  sentimentScore     Float?   // Sentiment analysis score
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([wineId, userId])
+  @@map("wine_reviews")
+}
+
+model WineSEO {
+  id                   String   @id @default(cuid())
+  wineId               String   @unique
+  
+  // Basic SEO
+  metaTitle            String?
+  metaDescription      String?
+  metaKeywords         String   // JSON array as string
+  slug                 String?  @unique
+  canonicalUrl         String?
+  
+  // Open Graph
+  ogTitle              String?
+  ogDescription        String?
+  ogImage              String?
+  ogType               String?  @default("product")
+  ogUrl                String?
+  
+  // Twitter Cards
+  twitterTitle         String?
+  twitterDescription   String?
+  twitterImage         String?
+  twitterCard          String?  @default("summary_large_image")
+  
+  // Structured Data
+  structuredData       String   // JSON-LD structured data
+  breadcrumbData       String?  // Breadcrumb structured data
+  productSchema        String?  // Product schema markup
+  
+  // SEO Performance
+  seoScore             Float?   // Overall SEO score (0-100)
+  keywordDensity       String?  // JSON object with keyword density data
+  readabilityScore     Float?   // Content readability score
+  
+  // Search optimization
+  searchTerms          String?  // JSON array of relevant search terms
+  competitorKeywords   String?  // JSON array of competitor keywords
+  
+  // Performance tracking
+  lastOptimized        DateTime?
+  optimizationNotes    String?
+  
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@map("wine_seo")
+}
+
+model ProductRecommendation {
+  id               String   @id @default(cuid())
+  sourceProductId  String
+  targetProductId  String?
+  
+  // Recommendation details
+  type             String   // similar_products, complementary, upsell, cross_sell, frequently_bought, seasonal
+  title            String
+  description      String
+  reason           String?  // Why this recommendation is made
+  
+  // Targeting and conditions
+  conditions       String   // JSON object with targeting conditions
+  targetProducts   String   // JSON array of target product IDs
+  customerSegments String?  // JSON array of customer segments this applies to
+  
+  // Performance and optimization
+  priority         Int      @default(1)
+  weight           Float    @default(1.0) // Recommendation weight for algorithms
+  clickThroughRate Float?   // CTR performance metric
+  conversionRate   Float?   // Conversion performance metric
+  
+  // Scheduling and availability
+  startDate        DateTime? // When recommendation becomes active
+  endDate          DateTime? // When recommendation expires
+  isActive         Boolean  @default(true)
+  isAutoGenerated  Boolean  @default(false) // Whether generated by ML algorithm
+  
+  // A/B testing
+  testGroup        String?  // A/B test group identifier
+  testVariant      String?  // Test variant name
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  sourceProduct Wine  @relation("SourceProduct", fields: [sourceProductId], references: [id], onDelete: Cascade)
+  targetProduct Wine? @relation("TargetProduct", fields: [targetProductId], references: [id], onDelete: SetNull)
+
+  @@map("product_recommendations")
+}
+
+// Product Certification and Award Tracking
+model ProductCertification {
+  id            String   @id @default(cuid())
+  wineId        String
+  
+  // Certification details
+  name          String   // Organic, Biodynamic, Sustainable, etc.
+  certifyingBody String  // Organization that issued certification
+  certificateNumber String?
+  
+  // Certification metadata
+  type          String   // ORGANIC, BIODYNAMIC, SUSTAINABLE, QUALITY, ORIGIN
+  level         String?  // Gold, Silver, Bronze, etc.
+  description   String?
+  
+  // Validity
+  issuedDate    DateTime
+  expiryDate    DateTime?
+  isActive      Boolean  @default(true)
+  isVerified    Boolean  @default(false)
+  
+  // Documentation
+  certificateUrl String? // URL to certificate document
+  logoUrl       String?  // Certification logo URL
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@map("product_certifications")
+}
+
+model ProductAward {
+  id            String   @id @default(cuid())
+  wineId        String
+  
+  // Award details
+  name          String   // Wine Spectator, Robert Parker, etc.
+  title         String   // Specific award title
+  category      String?  // Best Red Wine, Gold Medal, etc.
+  
+  // Award metadata
+  awardingBody  String   // Organization that gave the award
+  competition   String?  // Competition name if applicable
+  year          Int      // Year award was given
+  score         Float?   // Numerical score if applicable
+  maxScore      Float?   // Maximum possible score
+  
+  // Award level and recognition
+  level         String?  // Gold, Silver, Bronze, Best in Show, etc.
+  rank          Int?     // Ranking if applicable
+  description   String?
+  
+  // Documentation
+  certificateUrl String? // URL to award certificate
+  logoUrl       String?  // Award logo URL
+  pressRelease  String?  // URL to press release
+  
+  // Status
+  isActive      Boolean  @default(true)
+  isVerified    Boolean  @default(false)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wine Wine @relation(fields: [wineId], references: [id], onDelete: Cascade)
+
+  @@map("product_awards")
+}

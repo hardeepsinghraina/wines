@@ -1,0 +1,9 @@
+{
+  "name": "Database Query Optimizer",
+  "description": "Analyze Prisma queries for performance issues and suggest optimizations",
+  "trigger": {
+    "type": "onSave",
+    "filePattern": "backend/src/{services,controllers}/**/*.ts"
+  },
+  "prompt": "Review database queries and check for:\n1. N+1 query problems (missing 'include' or 'select')\n2. Missing database indexes for frequently queried fields\n3. Inefficient filtering that should be done at DB level\n4. Missing pagination on list queries\n5. Overfetching data (selecting unnecessary fields)\n6. Missing transaction handling for related operations\n7. Opportunities for query batching\n\nFor this wine e-commerce platform:\n- Product catalog queries should be optimized for filtering by price, region, vintage\n- Order queries should efficiently join with user and product data\n- NFT queries should minimize blockchain API calls\n- Search functionality should use proper indexing\n\nProvide specific Prisma query improvements and schema index suggestions."
+}

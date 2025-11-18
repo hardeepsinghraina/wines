@@ -1,0 +1,233 @@
+/* Import luxury fonts first */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+@import "tailwindcss";
+@import "../styles/utilities.css";
+
+:root {
+  /* Luxury Color Palette */
+  --burgundy: #4B1E2F;
+  --burgundy-light: #6B2E3F;
+  --burgundy-dark: #3B1E2F;
+  
+  --champagne-gold: #D4AF37;
+  --champagne-gold-light: #E4BF47;
+  --champagne-gold-dark: #C49F27;
+  
+  --charcoal-black: #1C1C1C;
+  --charcoal-light: #2C2C2C;
+  --charcoal-dark: #0C0C0C;
+  
+  --ivory: #F8F4E3;
+  --ivory-light: #FEFCF3;
+  --ivory-dark: #E8E4D3;
+  
+  --sapphire-blue: #0F3D57;
+  --sapphire-blue-light: #1F4D67;
+  --sapphire-blue-dark: #0F2D47;
+  
+  --muted-olive: #6B705C;
+  --muted-olive-light: #7B806C;
+  --muted-olive-dark: #5B604C;
+  
+  /* Semantic colors */
+  --primary: var(--burgundy);
+  --primary-foreground: var(--ivory);
+  --secondary: var(--champagne-gold);
+  --secondary-foreground: var(--charcoal-black);
+  --accent: var(--sapphire-blue);
+  --accent-foreground: var(--ivory);
+  --muted: var(--muted-olive);
+  --muted-foreground: var(--ivory);
+  
+  --background: var(--ivory);
+  --foreground: var(--charcoal-black);
+  --card: var(--ivory);
+  --card-foreground: var(--charcoal-black);
+  --border: var(--muted-olive);
+  --input: var(--ivory);
+  --ring: var(--burgundy);
+  
+  /* Success, warning, error states */
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --error: #ef4444;
+  --error-foreground: #ffffff;
+  
+  /* Typography */
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Lato', sans-serif;
+  --font-accent: 'Cormorant Garamond', serif;
+  
+  /* Shadows */
+  --shadow-luxury: 0 4px 20px rgba(75, 30, 47, 0.1);
+  --shadow-luxury-lg: 0 10px 40px rgba(75, 30, 47, 0.15);
+  --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.2);
+  --shadow-gold-lg: 0 10px 40px rgba(212, 175, 55, 0.3);
+}
+
+/* Theme variables are now handled through Tailwind config */
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* Typography classes */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.font-accent {
+  font-family: var(--font-accent);
+}
+
+/* Luxury design elements */
+.luxury-gradient {
+  background: linear-gradient(135deg, var(--burgundy) 0%, var(--sapphire-blue) 100%);
+}
+
+.gold-gradient {
+  background: linear-gradient(135deg, var(--champagne-gold) 0%, var(--champagne-gold-light) 100%);
+}
+
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background: rgba(248, 244, 227, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ivory);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-olive);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--burgundy);
+}
+
+/* Selection styling */
+::selection {
+  background: var(--champagne-gold);
+  color: var(--charcoal-black);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Enhanced shadow utilities */
+.shadow-3xl {
+  box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+}
+
+.shadow-luxury {
+  box-shadow: var(--shadow-luxury);
+}
+
+.shadow-luxury-lg {
+  box-shadow: var(--shadow-luxury-lg);
+}
+
+.shadow-gold {
+  box-shadow: var(--shadow-gold);
+}
+
+.shadow-gold-lg {
+  box-shadow: var(--shadow-gold-lg);
+}
+
+/* Smooth animations */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Luxury hover effects */
+.luxury-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.luxury-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-luxury-lg);
+}
+
+/* Image overlay effects */
+.image-overlay {
+  position: relative;
+  overflow: hidden;
+}
+
+.image-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(75, 30, 47, 0.1), rgba(15, 61, 87, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.image-overlay:hover::before {
+  opacity: 1;
+}
+
+/* Text effects */
+.text-shadow {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.text-shadow-lg {
+  text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Backdrop blur utilities */
+.backdrop-blur-luxury {
+  backdrop-filter: blur(12px) saturate(180%);
+  background: rgba(248, 244, 227, 0.8);
+}
