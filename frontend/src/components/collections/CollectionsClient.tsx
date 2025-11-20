@@ -94,7 +94,10 @@ export function CollectionsClient({ collections }: CollectionsClientProps) {
               <Button 
                 size="lg" 
                 className="bg-champagne-gold text-charcoal-black hover:bg-champagne-gold/90"
-                onClick={() => handleViewDetails('connoisseurs-choice')}
+                onClick={() => {
+                  // Navigate to the connoisseurs-choice collection
+                  window.location.href = '/collections/connoisseurs-choice';
+                }}
               >
                 Explore Collection
               </Button>
